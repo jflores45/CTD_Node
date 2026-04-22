@@ -1,0 +1,73 @@
+const express = require("express");
+const app = express();
+
+app.use(express.json());
+
+// app.use((req, res, next) => {
+//     console.log( 
+//         `method: ${req.method}`,
+//         `path: ${req.path}`,
+//         `query: ${req.query}`
+//     );
+//       next();
+// });
+// 1. Routes 
+app.get("/", (req, res) => {
+    res.status(200).send("Hello, World!");
+});
+
+app.post("/testpost", (req, res) => {
+    res.status(200).send("POST request received!");
+});
+ 
+// 2. 404 handler: middleware 
+const notFound = require("./middleware/not-found");
+app.use(notFound);
+
+// 3. Error handler: middleware
+const errorHandler = require("./middleware/error-handler");
+app.use(errorHandler);
+
+const port = process.env.PORT || 3000;
+const server = app.listen(port);
+
+module.exports = { app, server };
+
+// server.on('error', (err) => {
+//   if (err.code === 'EADDRINUSE') {
+//     console.error(`Port ${port} is already in use.`);
+//   } else {
+//     console.error('Server error:', err);
+//   }
+//   process.exit(1);
+// });
+
+// let isShuttingDown = false;
+// async function shutdown(code = 0) {
+//   if (isShuttingDown) return;
+//   isShuttingDown = true;
+//   console.log('Shutting down gracefully...');
+//   try {
+//     await new Promise(resolve => server.close(resolve));
+//     console.log('HTTP server closed.');
+//     // If you have DB connections, close them here
+//   } catch (err) {
+//     console.error('Error during shutdown:', err);
+//     code = 1;
+//   } finally {
+//     console.log('Exiting process...');
+//     process.exit(code);
+//   }
+// }
+
+// process.on('SIGINT', () => shutdown(0));  // ctrl+c
+// process.on('SIGTERM', () => shutdown(0)); // e.g. `docker stop`
+// process.on('uncaughtException', (err) => {
+//   console.error('Uncaught exception:', err);
+//   shutdown(1);
+// });
+// process.on('unhandledRejection', (reason) => {
+//   console.error('Unhandled rejection:', reason);
+//   shutdown(1);
+// });
+
