@@ -3,8 +3,10 @@ const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const dogsRouter = require('./routes/dogs');
 const { error } = require('console');
+const taskRouter = require("./routers/taskRoutes");
 
-const app = express();
+const app = express(); 
+
 
 // Middleware:
 const requestIdMiddleware = (req, res, next) => {
@@ -37,6 +39,7 @@ const validateJSON = (req, res, next) => {
     }
     next();
 };
+
 
 
 // 1. Request ID middleware (adds req.requestId)

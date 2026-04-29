@@ -4,11 +4,35 @@ global.user_id = null;
 global.users = [];
 global.tasks = [];
 
-const register = (req, res) => {
-    const newUser = { ...req.body }; 
+
+const crypto = require("crypto");
+const util = require("util");
+const scrypt = util.promisify(crypto.scrypt);
+
+async function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const derivedKey = await scrypt(password, salt, 64);
+  return `${salt}:${derivedKey.toString("hex")}`;
+}
+
+async function comparePassword(inputPassword, storedHash) {
+  const [salt, key] = storedHash.split(":");
+  const keyBuffer = Buffer.from(key, "hex");
+  const derivedKey = await scrypt(inputPassword, salt, 64);
+  return crypto.timingSafeEqual(keyBuffer, derivedKey);
+}
+
+// REGISTER
+const register = async (req, res) => {
+    
+    if (!req.body) req.body = {};
+
+    const { name, email, password } = req.body;
+
+    const hashedPassword = await hashPassword(password);
+    const newUser = { name, email, hashedPassword };
 
     global.users.push(newUser);
-    global.users_id = newUser;
 
     const userResponse = {
         name: newUser.name,
@@ -18,20 +42,23 @@ const register = (req, res) => {
      res.status(StatusCodes.CREATED).json(userResponse);
 }
 
-// LOGON (SKELETON)
-const logon = (req, res) => {
+// LOGON
+const logon = async (req, res) => {
+
+    if (!req.body) req.body = {};
 
     const { email, password } = req.body;
 
     const user = global.users.find(u => u.email === email);
+    const match = user && await comparePassword(password, user.hashedPassword);
 
-    if (!user || user.password !== password) {
+    if (!user || !match) {
         return res.status(StatusCodes.UNAUTHORIZED).json({ 
             message: "Invalid email or password" 
         });
     }
     // log user in 
-    global.user_id = user;
+    global.user_id = user.email;
 
     res.status(StatusCodes.OK).json({ 
         name: user.name, 
