@@ -1,9 +1,9 @@
 const {StatusCodes} = require("http-status-codes");
+const pool = require("../db/pg-pool");
 
 global.user_id = null;
 global.users = [];
 global.tasks = [];
-
 
 const crypto = require("crypto");
 const util = require("util");
@@ -23,47 +23,79 @@ async function comparePassword(inputPassword, storedHash) {
 }
 
 // REGISTER
-const register = async (req, res) => {
-    
-    if (!req.body) req.body = {};
+const register = async (req, res, next) => {
+  if (!req.body) req.body = {};
 
-    const { name, email, password } = req.body;
+  const { name, email, password } = req.body;
 
-    const hashedPassword = await hashPassword(password);
-    const newUser = { name, email, hashedPassword };
+  const hashed_password = await hashPassword(password);
 
-    global.users.push(newUser);
+  try {
+    const result = await pool.query(
+      `INSERT INTO users (email, name, hashed_password)
+       VALUES ($1, $2, $3)
+       RETURNING id, email, name`,
+      [email, name, hashed_password]
+    );
 
-    const userResponse = {
-        name: newUser.name,
-        email: newUser.email
-    };
+    const user = result.rows[0];
 
-     res.status(StatusCodes.CREATED).json(userResponse);
-}
+    global.user_id = user.id;
+
+    res.status(StatusCodes.CREATED).json({
+      name: user.name,
+      email: user.email
+    });
+
+  } catch (e) {
+    if (e.code === "23505") {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        message: "Email already registered"
+      });
+    }
+
+    return next(e); // pass other errors
+  }
+};
 
 // LOGON
-const logon = async (req, res) => {
+const logon = async (req, res, next) => {
+  if (!req.body) req.body = {};
 
-    if (!req.body) req.body = {};
+  const { email, password } = req.body;
 
-    const { email, password } = req.body;
+  try {
+    const result = await pool.query(
+      "SELECT * FROM users WHERE email = $1",
+      [email]
+    );
 
-    const user = global.users.find(u => u.email === email);
-    const match = user && await comparePassword(password, user.hashedPassword);
-
-    if (!user || !match) {
-        return res.status(StatusCodes.UNAUTHORIZED).json({ 
-            message: "Invalid email or password" 
-        });
+    if (result.rows.length === 0) {
+      return res.status(StatusCodes.UNAUTHORIZED).json({
+        message: "Invalid email or password"
+      });
     }
-    // log user in 
-    global.user_id = user.email;
 
-    res.status(StatusCodes.OK).json({ 
-        name: user.name, 
-        email: user.email 
+    const user = result.rows[0];
+
+    const match = await comparePassword(password, user.hashed_password);
+
+    if (!match) {
+      return res.status(StatusCodes.UNAUTHORIZED).json({
+        message: "Invalid email or password"
+      });
+    }
+
+    global.user_id = user.id;
+
+    res.status(StatusCodes.OK).json({
+      name: user.name,
+      email: user.email
     });
+
+  } catch (e) {
+    return next(e);
+  }
 };
 
 // LOGOFF (SKELETON)
