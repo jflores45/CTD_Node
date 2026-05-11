@@ -26,7 +26,18 @@ async function comparePassword(inputPassword, storedHash) {
 const register = async (req, res, next) => {
   if (!req.body) req.body = {};
 
-  const { name, email, password } = req.body;
+    // validate user input
+  const { error, value } = userSchema.validate(req.body, {
+    abortEarly: false
+  });
+
+  if (error) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      message: error.message
+    });
+  }
+
+  const { name, email, password } = value;
 
   const hashed_password = await hashPassword(password);
 
