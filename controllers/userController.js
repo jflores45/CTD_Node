@@ -1,5 +1,5 @@
 const {StatusCodes} = require("http-status-codes");
-
+const { userSchema } = require("../validation/userSchema"); 
 global.user_id = null;
 global.users = [];
 global.tasks = [];
@@ -26,8 +26,17 @@ async function comparePassword(inputPassword, storedHash) {
 const register = async (req, res) => {
     
     if (!req.body) req.body = {};
+    
+    const { error, value } = userSchema.validate(req.body, {
+        abortEarly: false
+    });
 
-    const { name, email, password } = req.body;
+    if (error) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+            message: error.message
+        });
+    }
+    const { name, email, password } = value;
 
     const hashedPassword = await hashPassword(password);
     const newUser = { name, email, hashedPassword };

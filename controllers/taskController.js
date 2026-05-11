@@ -43,7 +43,7 @@ const index = (req, res) => {
     );
 
     if (userTasks.length === 0) {
-        return res.status(StatusCodes.NOT_FOUND);
+        return res.status(StatusCodes.NOT_FOUND).json({ message: "No tasks found for the logged-in user."});
     }
 
     const sanitizedTasks = userTasks.map((task) => {
