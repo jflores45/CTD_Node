@@ -1,6 +1,7 @@
 const {StatusCodes} = require("http-status-codes");
 const pool = require("../db/pg-pool");
 
+const { userSchema } = require("../validation/userSchema"); 
 global.user_id = null;
 global.users = [];
 global.tasks = [];
