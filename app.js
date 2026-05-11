@@ -1,6 +1,11 @@
 const express = require("express");
 const app = express();
 
+const userRouter = require("./routes/userRoutes");
+const taskRouter = require("./routes/taskRoutes");
+const authMiddleware = require("./middleware/auth");
+
+
 app.use(express.json({ limit: "1kb" }));
 
 // 1. Routes 
@@ -12,15 +17,17 @@ app.post("/testpost", (req, res) => {
     res.status(200).json({ message: "POST request received!" });
 });
 
-const userRouter = require("./routes/userRoutes");
+// User routes
 app.use("/api/users", userRouter);
 
+// Task routes (protected)
+app.use("/api/tasks", authMiddleware, taskRouter);
  
-// 2. 404 handler: middleware 
+// 404 handler: middleware 
 const notFound = require("./middleware/not-found");
 app.use(notFound);
 
-// 3. Error handler: middleware
+// Error handler: middleware
 const errorHandler = require("./middleware/error-handler");
 app.use(errorHandler);
 
