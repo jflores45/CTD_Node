@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const pool = require("./db/pg-pool");
+const prisma = require("./db/prisma");
 
 const userRouter = require("./routes/userRoutes");
 const taskRouter = require("./routes/taskRoutes");
@@ -14,12 +14,12 @@ app.get("/", (req, res) => {
     res.status(200).json({ message: "Hello, World!" });
 });
 
-app.get("/health", async (req, res) => {
+app.get('/health', async (req, res) => {
   try {
-    await pool.query("SELECT 1");
-    res.json({ status: "ok", db: "connected" });
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ status: 'ok', db: 'connected' });
   } catch (err) {
-    res.status(500).json({ message: `db not connected, error: ${ err.message }` });
+    res.status(500).json({ status: 'error', db: 'not connected', error: err.message });
   }
 });
 
@@ -49,10 +49,10 @@ const shutdown = async () => {
   console.log("Shutting down server...");
 
   try {
-    await pool.end(); // close DB connections
-    console.log("Database connections closed");
+    await prisma.$disconnect();
+    console.log("Prisma disconnected");
   } catch (err) {
-    console.error("Error closing database pool:", err);
+    console.error("Error closing database:", err);
   }
 
   server.close(() => {
