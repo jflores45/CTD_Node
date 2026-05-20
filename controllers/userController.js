@@ -1,6 +1,7 @@
 const {StatusCodes} = require("http-status-codes");
 const prisma = require("../db/prisma");
 
+const { userSchema } = require("../validation/userSchema"); 
 global.user_id = null;
 global.users = [];
 global.tasks = [];
