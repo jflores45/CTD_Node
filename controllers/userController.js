@@ -1,5 +1,6 @@
 const {StatusCodes} = require("http-status-codes");
 const prisma = require("../db/prisma");
+const { userSchema } = require("../validation/userSchema");
 
 global.user_id = null;
 global.users = [];
@@ -25,47 +26,76 @@ async function comparePassword(inputPassword, storedHash) {
 // REGISTER
 const register = async (req, res, next) => {
     if (!req.body) req.body = {};
+    const { error, value } = userSchema.validate(req.body, {
+      abortEarly: false
+    });
 
-    const { name, email, password } = req.body;
-
-    try {
-        const hashedPassword = await hashPassword(password);
-        let user = null;
-
-        try {
-            user = await prisma.user.create({
-            data: {
-                    name,
-                    email: email.toLowerCase(),
-                    hashedPassword
-                },
-            select: {
-                    name: true,
-                    email: true,
-                    id: true
-                }
-            });
-
-        } catch (e) {
-
-            if (e.name === "PrismaClientKnownRequestError" && e.code === "P2002") {
-
-                return res.status(StatusCodes.BAD_REQUEST).json({
-                    message: "Email already registered"
-                });
-            }
-
-            return next(e); // the error handler takes care of other errors
-        }
-        global.user_id = user.id;
-
-        return res.status(StatusCodes.CREATED).json({
-            name: user.name,
-            email: user.email
-        });
-    } catch (e) {
-        return next(e);
+    if (error) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        message: error.message
+      });
     }
+
+    value.hashedPassword = await hashPassword(value.password);
+    delete value.password;
+
+    const { name, email, hashedPassword } = value;
+ 
+    try {
+        const result = await prisma.$transaction(async (tx) => {
+          // Create user account (similar to Assignment 6, but using tx instead of prisma)
+          const newUser = await tx.user.create({
+            data: { email, name, hashedPassword },
+            select: { id: true, email: true, name: true }
+          });
+
+          // Create 3 welcome tasks using createMany
+          const welcomeTaskData = [
+            { title: "Complete your profile", userId: newUser.id, priority: "medium" },
+            { title: "Add your first task", userId: newUser.id, priority: "high" },
+            { title: "Explore the app", userId: newUser.id, priority: "low" }
+          ];
+          await tx.task.createMany({ data: welcomeTaskData });
+
+          // Fetch the created tasks to return them
+          const welcomeTasks = await tx.task.findMany({
+            where: {
+              userId: newUser.id,
+              title: { in: welcomeTaskData.map(t => t.title) }
+            },
+            select: {
+              id: true,
+              title: true,
+              isCompleted: true,
+              userId: true,
+              priority: true
+            }
+          });
+
+        return { user: newUser, welcomeTasks };
+  });
+
+
+  // Store the user ID globally for session management (not secure for production)
+  global.user_id = result.user.id;
+  
+  // Send response with status 201
+  res.status(201);
+  res.json({
+    user: result.user,
+    welcomeTasks: result.welcomeTasks,
+    transactionStatus: "success"
+  });
+  return; 
+
+} catch (err) {
+    if (err.code === "P2002") {
+      // send the appropriate error back -- the email was already registered
+      return res.status(400).json({ error: "Email already registered" });
+    } else {
+      return next(err); // the error handler takes care of other errors
+    }
+}
 };
 
 // LOGON
