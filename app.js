@@ -1,13 +1,26 @@
 const express = require("express");
+const cookieParser = require("cookie-parser");
 const app = express();
 const prisma = require("./db/prisma");
 
 const userRouter = require("./routes/userRoutes");
 const taskRouter = require("./routes/taskRoutes");
-const authMiddleware = require("./middleware/auth");
+const jwtMiddleware = require("./middleware/jwtMiddleware");
 
-
+app.use(cookieParser());
 app.use(express.json({ limit: "1kb" }));
+
+app.set("trust proxy", 1);
+const helmet = require("helmet");
+const { xss } = require("express-xss-sanitizer");
+const rateLimiter = require("express-rate-limit");
+
+app.use(helmet());
+app.use(xss());
+app.use(rateLimiter({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+}));
 
 // 1. Routes 
 app.get("/", (req, res) => {
@@ -31,7 +44,7 @@ app.post("/testpost", (req, res) => {
 app.use("/api/users", userRouter);
 
 // Task routes (protected)
-app.use("/api/tasks", authMiddleware, taskRouter);
+app.use("/api/tasks", jwtMiddleware, taskRouter);
  
 // 404 handler: middleware 
 const notFound = require("./middleware/not-found");
