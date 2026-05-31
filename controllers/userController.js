@@ -137,7 +137,7 @@ const logon = async (req, res, next) => {
         });
       }
 
-      const  match = await comparePassword(password, user.hashedPassword);
+      const match = await comparePassword(password, user.hashedPassword);
 
       if (!match) {
         return res.status(StatusCodes.UNAUTHORIZED).json({
