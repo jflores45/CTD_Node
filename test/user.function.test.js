@@ -28,9 +28,9 @@ describe("register a user", () => {
     expect(saveRes.status).toBe(201);
   });
 
-  it("47. registration returns object with expected name", async () => {
-    expect(saveRes.body.user.name).toBe("John Deere");
-  });
+ it("47. registration returns object with expected name", async () => {
+  expect(saveRes.body.user.name).toBe("John Deere");
+ });
 
   it("48. returned object includes csrfToken", async () => {
     expect(saveRes.body.csrfToken).toBeDefined();

@@ -128,6 +128,34 @@ describe("testing logon, register, and logoff", () => {
     expect(jwtCookie).toContain("Jan 1970");
   });
 });
+// in user.controller.test.js, after the describe block, before JWT describe
+
+it("41. logon with bad password returns 401", async () => {
+  const req = httpMocks.createRequest({
+    method: "POST",
+    body: {
+      email: "bob@sample.com",
+      password: "WrongPassword1!",
+    },
+  });
+  saveRes = MockResponseWithCookies();
+  await waitForRouteHandlerCompletion(logon, req, saveRes);
+  expect(saveRes.statusCode).toBe(401);
+});
+
+it("42. can't register with already registered email", async () => {
+  const req = httpMocks.createRequest({
+    method: "POST",
+    body: {
+      name: "Bob",
+      email: "bob@sample.com", // already registered in test 33
+      password: "Pa$$word20",
+    },
+  });
+  saveRes = MockResponseWithCookies();
+  await waitForRouteHandlerCompletion(register, req, saveRes);
+  expect(saveRes.statusCode).toBe(400);
+});
 
 describe("Testing JWT middleware", () => {
 

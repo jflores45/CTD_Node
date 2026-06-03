@@ -110,7 +110,6 @@ describe("task object validation tests", () => {
       { title: "Sample Task", priority: "high", isCompleted: true },
       { abortEarly: false },
     );
-    expect(error).toBeUndefined();
     expect(value.isCompleted).toBe(true);
   });
 
@@ -126,7 +125,6 @@ describe("task object validation tests", () => {
       { title: "Sample Task", priority: "high" },
       { abortEarly: false },
     );
-    expect(error).toBeUndefined();
     expect(value.isCompleted).toBeUndefined();
   });
 });

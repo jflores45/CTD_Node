@@ -58,11 +58,7 @@ const create = async (req, res, next) => {
       abortEarly: false
     });
 
-    if (error) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        message: error.message
-      });
-    }
+    if (error) return next(error);
 
     const isCompleted = value.isCompleted === undefined ? false : value.isCompleted;
 
@@ -160,7 +156,7 @@ const show = async (req, res, next) => {
         userId: req.user.id
       },
       select: {
-        id: true,
+      
         title: true,
         isCompleted: true,
         priority: true,
@@ -263,7 +259,7 @@ const deleteTask = async (req, res, next) => {
         }
       },
       select: {
-        id: true,
+       
         title: true,
         isCompleted: true
       }
