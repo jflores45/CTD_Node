@@ -1,6 +1,5 @@
 const { StatusCodes } = require("http-status-codes");
-const { patchTaskSchema } = require("../validation/taskSchema");
-const { taskSchema } = require("../validation/taskSchema"); 
+const { taskSchema, patchTaskSchema } = require("../validation/taskSchema");
 const prisma = require("../db/prisma");
 
 
@@ -82,7 +81,7 @@ const create = async (req, res, next) => {
 };
 
 // INDEX - get all tasks for logged in user
-const index = async (req, res, next) => {
+const index = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
@@ -144,7 +143,7 @@ const index = async (req, res, next) => {
 
 
 // SHOW - get single task
-const show = async (req, res, next) => {
+const show = async (req, res) => {
     const taskId = parseInt(req.params?.id);
     
     if (!taskId) {

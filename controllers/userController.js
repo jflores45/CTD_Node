@@ -25,7 +25,7 @@ async function comparePassword(inputPassword, storedHash) {
   return crypto.timingSafeEqual(keyBuffer, derivedKey);
 }
 // set cookie flags
-const cookieFlags = (req) => {
+const cookieFlags = () => {
   return {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production", // only when HTTPS is available

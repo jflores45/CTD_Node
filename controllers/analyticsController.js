@@ -1,7 +1,7 @@
 const prisma = require("../db/prisma");
 
 
-const getUserAnalytics = async (req, res, next) => {
+const getUserAnalytics = async (req, res) => {
     // Parse and validate user ID
     const userId = parseInt(req.params.id);
     if (isNaN(userId)) {
@@ -63,7 +63,7 @@ const getUserAnalytics = async (req, res, next) => {
     return;
 }
 
-const getUsersWithStats = async (req, res, next) => {
+const getUsersWithStats = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
@@ -117,7 +117,7 @@ res.status(200).json({
 });
 
 }
-const searchTasks = async (req, res, next) => {
+const searchTasks = async (req, res) => {
     // SEARCH ENDPOINT
     const searchQuery = req.query.q;
     
