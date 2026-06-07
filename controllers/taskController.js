@@ -1,6 +1,5 @@
 const { StatusCodes } = require("http-status-codes");
-const { patchTaskSchema } = require("../validation/taskSchema");
-const { taskSchema } = require("../validation/taskSchema"); 
+const { taskSchema, patchTaskSchema } = require("../validation/taskSchema");
 const prisma = require("../db/prisma");
 
 
@@ -58,11 +57,7 @@ const create = async (req, res, next) => {
       abortEarly: false
     });
 
-    if (error) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        message: error.message
-      });
-    }
+    if (error) return next(error);
 
     const isCompleted = value.isCompleted === undefined ? false : value.isCompleted;
 
@@ -86,7 +81,7 @@ const create = async (req, res, next) => {
 };
 
 // INDEX - get all tasks for logged in user
-const index = async (req, res, next) => {
+const index = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
@@ -148,7 +143,7 @@ const index = async (req, res, next) => {
 
 
 // SHOW - get single task
-const show = async (req, res, next) => {
+const show = async (req, res) => {
     const taskId = parseInt(req.params?.id);
     
     if (!taskId) {
@@ -160,7 +155,7 @@ const show = async (req, res, next) => {
         userId: req.user.id
       },
       select: {
-        id: true,
+      
         title: true,
         isCompleted: true,
         priority: true,
@@ -263,7 +258,7 @@ const deleteTask = async (req, res, next) => {
         }
       },
       select: {
-        id: true,
+       
         title: true,
         isCompleted: true
       }
