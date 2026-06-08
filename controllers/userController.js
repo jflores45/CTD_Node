@@ -4,6 +4,7 @@ const { userSchema } = require("../validation/userSchema");
 const { randomUUID } = require("crypto");
 const jwt = require("jsonwebtoken");
 
+const { userSchema } = require("../validation/userSchema"); 
 global.user_id = null;
 global.users = [];
 global.tasks = [];
