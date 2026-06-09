@@ -8,7 +8,7 @@ const taskRouter = require("./routes/taskRoutes");
 const jwtMiddleware = require("./middleware/jwtMiddleware");
 
 app.use(cookieParser());
-app.use(express.json({ limit: "1kb" }));
+app.use(express.json({ limit: "1mb" }));
 
 app.set("trust proxy", 1);
 const helmet = require("helmet");
